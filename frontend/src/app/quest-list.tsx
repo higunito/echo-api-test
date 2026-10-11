@@ -1,5 +1,9 @@
 "use client";
 
+// 一覧画面の本体。page.tsx から <Suspense> の中で使われる。
+// useSearchParams（URL のクエリを読むフック）を使うコンポーネントは、Next.js 16 の
+// cacheComponents では <Suspense> で囲む必要がある（囲まないとビルド時の事前描画でエラーになる）。
+
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -38,6 +42,8 @@ export function QuestList() {
   const [data, setData] = useState<QuestPage | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // URL のクエリ（status / exclude_expired / page）が変わるたびに API を呼び直す。
+  // cancelled フラグは、古いリクエストの結果が後から届いて新しい表示を上書きするのを防ぐため。
   useEffect(() => {
     let cancelled = false;
     listQuests({ status, excludeExpired, page })
@@ -55,6 +61,8 @@ export function QuestList() {
     };
   }, [status, excludeExpired, page]);
 
+  // 絞り込みやページ送りは state ではなく URL を書き換える。URL が変わると上の useEffect が再実行される。
+  // URL に状態を持たせると、再読み込みやブラウザの「戻る」でも同じ表示に戻れる（FR-006a）。
   function navigate(next: { status?: QuestStatus; excludeExpired?: boolean; page?: number }) {
     const q = new URLSearchParams();
     if (next.status) q.set("status", next.status);

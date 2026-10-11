@@ -13,6 +13,7 @@ import { QuestActions } from "./quest-actions";
 
 /** 詳細（FR-007）。受注・完了報告は QuestActions が担う。 */
 export function QuestDetail() {
+  // useParams でパス /quests/[id] の [id] 部分を取り出す（フォルダ名 [id] が動的ルートになる）。
   const { id } = useParams<{ id: string }>();
   const [quest, setQuest] = useState<Quest | null>(null);
   const [notFound, setNotFound] = useState(false);

@@ -25,10 +25,13 @@ export function QuestActions({ quest, onChange }: Props) {
     );
   }
 
+  // ボタンの表示条件は画面側の目安。最終的な判定（受注者本人か、期限内か）は必ずバックエンドの domain が行い、
+  // 条件を満たさなければ API がエラーを返す（例: 他の人が先に受注していた → 409 QUEST_NOT_OPEN）。
   const canAccept = quest.status === "open" && !quest.is_expired;
   const canComplete = quest.status === "accepted" && quest.assignee?.id === adventurerId;
   if (!canAccept && !canComplete) return null;
 
+  // 受注・完了報告で共通の処理。成功したら返ってきた最新のクエストで画面を更新する（onChange）。
   async function run(action: (id: string, adventurerId: string) => Promise<Quest>) {
     setPending(true);
     setError(null);

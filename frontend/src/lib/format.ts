@@ -15,7 +15,10 @@ export function formatDateTime(iso: string | null): string {
   return dateTimeFormat.format(new Date(iso));
 }
 
-/** `<input type="datetime-local">` の値（日本時間とみなす）を UTC の ISO 文字列にする。 */
+/**
+ * `<input type="datetime-local">` の値（日本時間とみなす）を UTC の ISO 文字列にする。
+ * 例: "2026-10-12T12:00" → "2026-10-12T03:00:00.000Z"。API とは UTC でやり取りする（research R12）。
+ */
 export function jstLocalToISO(local: string): string {
   return new Date(`${local}:00+09:00`).toISOString();
 }

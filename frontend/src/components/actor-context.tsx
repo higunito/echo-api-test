@@ -1,5 +1,9 @@
 "use client";
 
+// "use client" はこのファイルがブラウザで動く「クライアントコンポーネント」であることを示す。
+// useState / useEffect / localStorage はブラウザでしか使えないので、この宣言が必要。
+// 何も書かないファイルは、サーバーで描画される「サーバーコンポーネント」になる（Next.js App Router の既定）。
+
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 export type Role = "guild" | "adventurer";
@@ -17,6 +21,8 @@ type ActorContextValue = Actor & {
 const STORAGE_KEY = "guild.actor";
 const defaultActor: Actor = { role: "guild", adventurerId: null };
 
+// React Context は、離れたコンポーネント間で値を共有する仕組み。
+// layout.tsx で <ActorProvider> で全体を囲み、どの画面からも useActor() で役割と冒険者を読める。
 const ActorContext = createContext<ActorContextValue | null>(null);
 
 function load(): Actor {
