@@ -1,2 +1,80 @@
 [tools]
 uv = "0.13.0"
+go = "1.27.2"
+node = "24.21.0"
+atlas = "1.3.0"
+sqlc = "1.31.1"
+golangci-lint = "2.14.0"
+
+[env]
+DATABASE_URL = "postgres://guild:guild@localhost:5432/guild?sslmode=disable"
+TEST_DATABASE_URL = "postgres://guild:guild@localhost:5433/guild_test?sslmode=disable"
+
+[tasks."db:up"]
+description = "Postgres（開発用・テスト用）を起動"
+run = "docker compose up -d --wait"
+
+[tasks."db:down"]
+description = "Postgres を停止"
+run = "docker compose down"
+
+[tasks."db:diff"]
+description = "schema.sql との差分からマイグレーションを生成（例: mise run db:diff add_xxx）"
+dir = "backend"
+run = "atlas migrate diff --env local"
+
+[tasks."db:migrate"]
+description = "開発用 DB にマイグレーションを適用"
+dir = "backend"
+run = "atlas migrate apply --env local"
+
+[tasks."db:migrate:test"]
+description = "テスト用 DB にマイグレーションを適用"
+dir = "backend"
+run = "atlas migrate apply --env test"
+
+[tasks."db:seed"]
+description = "冒険者の初期データを投入"
+dir = "backend"
+run = "docker compose -f ../compose.yaml exec -T db psql -v ON_ERROR_STOP=1 -U guild -d guild < db/seed.sql"
+
+[tasks."db:seed:bulk"]
+description = "性能確認用にクエストを 1,000 件投入"
+dir = "backend"
+run = "docker compose -f ../compose.yaml exec -T db psql -v ON_ERROR_STOP=1 -U guild -d guild < db/seed_bulk.sql"
+
+[tasks.gen]
+description = "sqlc でクエリコードを生成"
+dir = "backend"
+run = "sqlc generate"
+
+[tasks.check]
+description = "atlas.sum の整合性と sqlc 生成物が最新であることを確認"
+dir = "backend"
+run = ["atlas migrate validate --env local", "sqlc diff"]
+
+[tasks.lint]
+description = "Go の静的解析"
+dir = "backend"
+run = "golangci-lint run ./..."
+
+[tasks.test]
+description = "単体テスト（domain / usecase / handler）"
+dir = "backend"
+run = "go test ./..."
+
+[tasks."test:integration"]
+description = "Postgres を使う統合テストを含むテスト"
+dir = "backend"
+depends = ["db:migrate:test"]
+run = "go test -tags=integration -count=1 ./..."
+
+[tasks."dev:backend"]
+description = "API サーバを起動（:8080）"
+dir = "backend"
+run = "go run ./cmd/server"
+
+[tasks."dev:frontend"]
+description = "フロントエンドを起動（:3000）"
+dir = "frontend"
+run = "npm run dev"

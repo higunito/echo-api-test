@@ -1,0 +1,30 @@
+# sqlc の設定。db/queries/*.sql の SQL から型付きの Go コードを生成する（`mise run gen`）。
+# 生成先の internal/infrastructure/postgres/sqlcgen/ は手編集しない（憲法 IV）。
+version: "2"
+sql:
+  - engine: postgresql
+    schema: db/schema.sql   # テーブル定義（列の型を知るために読む）
+    queries: db/queries/    # クエリ定義
+    gen:
+      go:
+        package: sqlcgen
+        out: internal/infrastructure/postgres/sqlcgen
+        sql_package: pgx/v5   # database/sql ではなく pgx を直接使うコードを生成する
+        emit_json_tags: false # 生成した型は DB 用。JSON への変換は handler で行う
+        # overrides: DB の型を、生成コードでどの Go の型にするかを指定する。
+        # 指定しないと pgtype.UUID や pgtype.Timestamptz になり、domain との変換が面倒になる。
+        overrides:
+          - db_type: uuid
+            go_type: github.com/google/uuid.UUID
+          - db_type: uuid
+            nullable: true # NULL 可の列（assignee_id）
+            go_type:
+              import: github.com/google/uuid
+              type: NullUUID
+          - db_type: timestamptz
+            go_type: time.Time
+          - db_type: timestamptz
+            nullable: true # NULL 可の列（deadline など）は *time.Time（nil = NULL）
+            go_type:
+              type: time.Time
+              pointer: true
