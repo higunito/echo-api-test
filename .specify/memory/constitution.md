@@ -1,50 +1,63 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+- Version change: 1.0.0 → 1.1.0
+- Modified principles: IV (golang-migrate → Atlas)
+- Added sections: none
+- Removed sections: none
+- Deferred TODOs: none
+-->
+# Adventurer Guild (echo-api-test) Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. 仕様駆動開発 (NON-NEGOTIABLE)
+すべての機能は spec-kit のフロー（constitution → specify → clarify → plan → tasks → implement）
+を経なければならない（MUST）。仕様・計画は `specs/` 配下の成果物を正とし、
+それらを経ずに直接実装してはならない（MUST NOT）。
+理由: 本プロジェクトは Claude Code + spec-kit による実開発の実践が目的であるため。
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. DDD + クリーンアーキテクチャ
+バックエンドは domain / usecase / interface(handler) / infrastructure の層に分け、
+依存は常に外側から内側へ向かわなければならない（MUST）。domain 層は Echo・sqlc・pgx
+などのフレームワーク／DB ライブラリに依存してはならない（MUST NOT）。
+理由: ビジネスルールを技術詳細から分離し、テスト容易性と学習価値を確保するため。
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. テストファースト
+domain / usecase 層の振る舞いには単体テストを書かなければならない（MUST）。
+テストは実装より先に書き、失敗を確認してから実装する（Red-Green-Refactor）。
+外部依存（DB 等）はインターフェース越しに差し替え可能でなければならない（MUST）。
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. スキーマ・クエリの明示管理
+DB スキーマ変更は Atlas のマイグレーションでのみ行い（MUST）、
+クエリは sqlc で型安全に生成しなければならない（MUST）。生成コードは手編集してはならない
+（MUST NOT）。マイグレーションファイルはバージョン管理し、`atlas.sum` の整合性を保つこと。
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. シンプルさ
+現在の仕様が要求しない抽象化・機能を追加してはならない（YAGNI, MUST NOT）。
+複雑さを導入する場合は plan.md の Complexity Tracking に理由を記録しなければならない（MUST）。
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## 技術スタック制約
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- バックエンド: Go + Echo v4、PostgreSQL（Docker Compose で起動）。
+- データアクセス: sqlc + pgx、マイグレーションは Atlas。
+- フロントエンド: Next.js (App Router) + Tailwind CSS + shadcn/ui。
+- ツールバージョンは mise（`mise.toml`）で管理しなければならない（MUST）。
+- 上記スタックの変更は憲法の改訂（Governance 参照）を伴わなければならない（MUST）。
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## 開発ワークフロー
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+- 機能ごとにブランチと `specs/<feature>/` を作成し、spec・plan・tasks を揃えてから実装する。
+- 各タスク完了時にテストが通ること（MUST）。失敗したまま次へ進んではならない。
+- plan.md の Constitution Check で本憲法への適合を確認しなければならない（MUST）。
+- コミットは小さく保ち、`docs:` `feat:` `fix:` 等のプレフィックスを用いる（SHOULD）。
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+本憲法は他のすべての開発慣行に優先する。改訂は変更内容と理由を文書化し、
+依存するテンプレート／成果物との整合を確認したうえで行う。
+バージョニングは Semantic Versioning に従う: 原則の削除・再定義は MAJOR、
+原則やセクションの追加・実質的拡張は MINOR、文言修正等は PATCH。
+すべての plan / レビューで本憲法への適合を確認し、違反は Complexity Tracking に
+正当化を記録するか、是正しなければならない（MUST）。
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.1.0 | **Ratified**: 2026-10-11 | **Last Amended**: 2026-10-11
