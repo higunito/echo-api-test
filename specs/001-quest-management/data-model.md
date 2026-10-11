@@ -21,7 +21,7 @@
 | id | UUID | PK | クエスト ID（アプリ側で UUIDv7 を生成） |
 | title | string | 1〜100 文字、必須（前後の空白は除去してから判定） | FR-002 |
 | description | string | 0〜2000 文字 | 説明 |
-| reward | int | 0 以上 | 報酬（ゴールド）。FR-003 |
+| reward | int | 0 以上 2,147,483,647 以下 | 報酬（ゴールド）。FR-003 |
 | deadline | timestamp (UTC) / null | 登録時点より未来 | 期限。任意。FR-004 |
 | status | enum | `open` / `accepted` / `completed` | 募集中 / 受注済 / 完了 |
 | assignee_id | UUID / null | FK → Adventurer.id | 受注者 |

@@ -34,3 +34,14 @@ go.work.sum
 
 # tmp file
 tmp
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/next-env.d.ts
+
+# Backend build output
+backend/bin/
+
+# OS / editor
+.DS_Store
+*.swp
