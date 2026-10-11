@@ -1,7 +1,7 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.1.0
-- Modified principles: IV (golang-migrate → Atlas)
+- Version change: 1.1.0 → 1.1.1
+- Modified principles: none (開発ワークフローのテスト通過条件を明確化。III との矛盾を解消)
 - Added sections: none
 - Removed sections: none
 - Deferred TODOs: none
@@ -47,7 +47,8 @@ DB スキーマ変更は Atlas のマイグレーションでのみ行い（MUST
 ## 開発ワークフロー
 
 - 機能ごとにブランチと `specs/<feature>/` を作成し、spec・plan・tasks を揃えてから実装する。
-- 各タスク完了時にテストが通ること（MUST）。失敗したまま次へ進んではならない。
+- 実装タスクの完了時には関連するテストがすべて通ること（MUST）。失敗したまま次の実装タスクへ
+  進んではならない。ただし原則 III に従い先に書くテストタスクは、失敗を確認した状態で完了としてよい。
 - plan.md の Constitution Check で本憲法への適合を確認しなければならない（MUST）。
 - コミットは小さく保ち、`docs:` `feat:` `fix:` 等のプレフィックスを用いる（SHOULD）。
 
@@ -60,4 +61,4 @@ DB スキーマ変更は Atlas のマイグレーションでのみ行い（MUST
 すべての plan / レビューで本憲法への適合を確認し、違反は Complexity Tracking に
 正当化を記録するか、是正しなければならない（MUST）。
 
-**Version**: 1.1.0 | **Ratified**: 2026-10-11 | **Last Amended**: 2026-10-11
+**Version**: 1.1.1 | **Ratified**: 2026-10-11 | **Last Amended**: 2026-10-11

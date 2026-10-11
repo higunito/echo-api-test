@@ -75,7 +75,7 @@
 | `ErrQuestNotAccepted` | `Complete` | 未受注 |
 | `ErrQuestAlreadyCompleted` | `Complete` | 既に完了 |
 | `ErrNotAssignee` | `Complete` | 受注者本人ではない |
-| `ErrConcurrentModification` | リポジトリ | 楽観的ロックの競合（usecase で `ErrQuestNotOpen` 相当に変換） |
+| `ErrConcurrentModification` | リポジトリ | 楽観的ロックの競合。usecase で操作ごとに変換する: 受注（AcceptQuest）では `ErrQuestNotOpen`、完了報告（CompleteQuest）では `ErrQuestAlreadyCompleted` |
 
 ## リポジトリインターフェース（domain に定義）
 
