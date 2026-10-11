@@ -1,0 +1,250 @@
+openapi: 3.1.0
+info:
+  title: Adventurer Guild API - Quest Management
+  version: 0.1.0
+  description: |
+    001-quest-management の HTTP API 契約。認証なし（spec Clarifications Q1）。
+    日時はすべて UTC の ISO 8601（RFC 3339）文字列。
+servers:
+  - url: http://localhost:8080/api
+paths:
+  /adventurers:
+    get:
+      summary: 冒険者の一覧（操作する冒険者の選択用）
+      operationId: listAdventurers
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Adventurer" }
+  /quests:
+    post:
+      summary: クエストを登録する（US1, FR-001〜FR-005）
+      operationId: createQuest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateQuestRequest" }
+      responses:
+        "201":
+          description: 登録された（status は open）
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Quest" }
+        "400":
+          description: |
+            VALIDATION_ERROR（JSON 不正）/ INVALID_TITLE / INVALID_DESCRIPTION /
+            INVALID_REWARD / DEADLINE_IN_PAST
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+    get:
+      summary: クエストの一覧（US2, FR-006, FR-006a, FR-007b）
+      operationId: listQuests
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema: { $ref: "#/components/schemas/QuestStatus" }
+        - name: exclude_expired
+          in: query
+          required: false
+          schema: { type: boolean, default: false }
+        - name: page
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, default: 1 }
+      responses:
+        "200":
+          description: 登録日時の新しい順、1 ページ 20 件。範囲外のページは items が空配列。
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QuestPage" }
+        "400":
+          description: VALIDATION_ERROR（status が不正、page が 1 未満など）
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /quests/{questId}:
+    get:
+      summary: クエストの詳細（US2, FR-007）
+      operationId: getQuest
+      parameters:
+        - $ref: "#/components/parameters/QuestId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Quest" }
+        "404":
+          description: QUEST_NOT_FOUND
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /quests/{questId}/accept:
+    post:
+      summary: クエストを受注する（US3, FR-008, FR-009）
+      operationId: acceptQuest
+      parameters:
+        - $ref: "#/components/parameters/QuestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdventurerActionRequest" }
+      responses:
+        "200":
+          description: 受注した（status は accepted）
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Quest" }
+        "400":
+          description: VALIDATION_ERROR（adventurer_id が無い・UUID でない）
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "404":
+          description: QUEST_NOT_FOUND / ADVENTURER_NOT_FOUND
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "409":
+          description: |
+            QUEST_NOT_OPEN（既に受注済・完了。同時受注で競合した場合もこれ）/ QUEST_EXPIRED
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /quests/{questId}/complete:
+    post:
+      summary: 完了報告する（US4, FR-010）
+      operationId: completeQuest
+      parameters:
+        - $ref: "#/components/parameters/QuestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdventurerActionRequest" }
+      responses:
+        "200":
+          description: 完了した（status は completed）
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Quest" }
+        "400":
+          description: VALIDATION_ERROR
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "403":
+          description: NOT_ASSIGNEE（受注者本人ではない）
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "404":
+          description: QUEST_NOT_FOUND / ADVENTURER_NOT_FOUND
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "409":
+          description: QUEST_NOT_ACCEPTED / QUEST_ALREADY_COMPLETED
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+components:
+  parameters:
+    QuestId:
+      name: questId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    QuestStatus:
+      type: string
+      enum: [open, accepted, completed]
+    Adventurer:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+    CreateQuestRequest:
+      type: object
+      required: [title, reward]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 100 }
+        description: { type: string, maxLength: 2000, default: "" }
+        reward: { type: integer, minimum: 0 }
+        deadline: { type: [string, "null"], format: date-time }
+    AdventurerActionRequest:
+      type: object
+      required: [adventurer_id]
+      properties:
+        adventurer_id: { type: string, format: uuid }
+    Quest:
+      type: object
+      required: [id, title, description, reward, deadline, status, is_expired, assignee, accepted_at, completed_at, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        reward: { type: integer }
+        deadline: { type: [string, "null"], format: date-time }
+        status: { $ref: "#/components/schemas/QuestStatus" }
+        is_expired:
+          type: boolean
+          description: status が open かつ期限を過ぎているとき true（保存されない派生値）
+        assignee:
+          oneOf:
+            - $ref: "#/components/schemas/Adventurer"
+            - type: "null"
+        accepted_at: { type: [string, "null"], format: date-time }
+        completed_at: { type: [string, "null"], format: date-time }
+        created_at: { type: string, format: date-time }
+    QuestPage:
+      type: object
+      required: [items, page, per_page, total_count, total_pages]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Quest" }
+        page: { type: integer }
+        per_page: { type: integer, const: 20 }
+        total_count: { type: integer }
+        total_pages: { type: integer, description: total_count が 0 のときは 0 }
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION_ERROR
+                - INVALID_TITLE
+                - INVALID_DESCRIPTION
+                - INVALID_REWARD
+                - DEADLINE_IN_PAST
+                - QUEST_NOT_FOUND
+                - ADVENTURER_NOT_FOUND
+                - QUEST_NOT_OPEN
+                - QUEST_EXPIRED
+                - QUEST_NOT_ACCEPTED
+                - QUEST_ALREADY_COMPLETED
+                - NOT_ASSIGNEE
+                - INTERNAL_ERROR
+            message:
+              type: string
+              description: 利用者向けの日本語メッセージ（FR-012）
